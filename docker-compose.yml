@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - STORAGE_TYPE=dynamodb
+      - AWS_REGION=us-west-2
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+      - TABLE_NAME=ingested_data
+      - API_ENDPOINT=https://jsonplaceholder.typicode.com/posts
+      - INGESTION_INTERVAL=5m
+      - API_TIMEOUT=30s
+      - RETRY_COUNT=3
+      - SERVER_PORT=8080
+    depends_on:
+      - dynamodb
+    networks:
+      - app-network
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    networks:
+      - app-network
+
+  # Alternative: MongoDB setup
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: mongodb
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=admin
+  #     - MONGO_INITDB_ROOT_PASSWORD=password
+  #   networks:
+  #     - app-network
+
+  # Alternative: PostgreSQL setup
+  # postgres:
+  #   image: postgres:13
+  #   container_name: postgres
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     - POSTGRES_DB=ingestion_db
+  #     - POSTGRES_USER=admin
+  #     - POSTGRES_PASSWORD=password
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
+    driver: bridge
